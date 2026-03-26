@@ -1,0 +1,34 @@
+{
+    "manifest_version": 3,
+    "name": "LLM Retracer",
+    "version": "1.0.0",
+    "description": "Jump back to your messages in any LLM chat",
+    "permissions": [
+        "activeTab",
+        "scripting",
+        "sidePanel"
+    ],
+    "host_permissions": [
+        "https://chat.openai.com/*",
+        "https://claude.ai/*",
+        "https://gemini.google.com/*"
+    ],
+    "content_scripts": [
+        {
+            "matches": [
+                "https://chat.openai.com/*",
+                "https://claude.ai/*",
+                "https://gemini.google.com/*"
+            ],
+            "js": [
+                "src/content/index.ts"
+            ]
+        }
+    ],
+    "side_panel": {
+        "default_path": "index.html"
+    },
+    "action": {
+        "default_title": "Open LLM Retracer"
+    }
+}
