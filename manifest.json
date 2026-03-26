@@ -9,6 +9,7 @@
         "sidePanel"
     ],
     "host_permissions": [
+        "https://chatgpt.com/*",
         "https://chat.openai.com/*",
         "https://claude.ai/*",
         "https://gemini.google.com/*"
@@ -16,6 +17,7 @@
     "content_scripts": [
         {
             "matches": [
+                "https://chatgpt.com/*",
                 "https://chat.openai.com/*",
                 "https://claude.ai/*",
                 "https://gemini.google.com/*"
