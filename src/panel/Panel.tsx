@@ -16,7 +16,7 @@ export default function Panel() {
             // @ts-ignore
             chrome.tabs.sendMessage(id, { type: 'GET_MESSAGES' }, (res) => {
                 if (res?.messages) {
-                    setMessages([...res.messages].reverse()) // newest first
+                    setMessages([...res.messages]) 
                 }
                 setLoading(false)
             })
