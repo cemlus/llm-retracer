@@ -2,7 +2,7 @@ import type { ExtensionMessage, UserMessage } from '../types/messages'
 
 const SELECTORS: Record<string, string> = {
     'chatgpt.com': 'div[data-message-author-role="user"]',
-    'chat.openai.com': 'div[data-message-author-role="user"]', // fallback for old URL
+    'chat.openai.com': 'div[data-message-author-role="user"]', 
     'claude.ai': 'div[data-testid="user-message"]',
     'gemini.google.com': 'div[class*="query-text-line"]',
 }
@@ -29,7 +29,6 @@ const collect = () => {
 }
 
 const pushToPanel = () => {
-    // Debounce so rapid DOM mutations don't fire 50 messages at once
     if (pushDebounceTimer) clearTimeout(pushDebounceTimer)
     pushDebounceTimer = setTimeout(() => {
         // @ts-ignore
@@ -37,19 +36,16 @@ const pushToPanel = () => {
             type: 'MESSAGES_UPDATED',
             messages: mapMessages(),
         }).catch(() => {
-            // Panel is closed — this is fine, ignore the error
         })
     }, 150)
 }
 
-// Watch for new user message elements specifically
 const domObserver = new MutationObserver((mutations) => {
     if (!selector) return
     let relevant = false
     for (const mutation of mutations) {
       for (const node of Array.from(mutation.addedNodes)) {
         if (!(node instanceof Element)) continue
-        // Check if the added node is or contains a user message
         if (node.matches(selector) || node.querySelector(selector)) {
           relevant = true
           break
