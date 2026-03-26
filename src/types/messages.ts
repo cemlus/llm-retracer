@@ -8,3 +8,4 @@ export type ExtensionMessage =
     | { type: 'GET_MESSAGES' }
     | { type: 'GET_MESSAGES_RESPONSE'; messages: UserMessage[] }
     | { type: 'SCROLL_TO'; index: number }
+    | { type: 'MESSAGES_UPDATED'; messages: UserMessage[] }

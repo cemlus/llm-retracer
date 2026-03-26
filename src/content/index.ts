@@ -10,46 +10,86 @@ const SELECTORS: Record<string, string> = {
 const hostName = window.location.hostname;
 const selector = SELECTORS[hostName];
 let userMessages: Element[] = [];
+let pushDebounceTimer: ReturnType<typeof setTimeout> | null = null
+
+const mapMessages = (): UserMessage[] => {
+    return userMessages.map((el, i) => ({
+        index: i,
+        preview: (el as HTMLElement).innerText.slice(0, 90).trim(),
+        fullText: (el as HTMLElement).innerText,
+    }))
+}
 
 const collect = () => {
     if (!selector) return;
-    userMessages = Array.from(document.querySelectorAll(selector))
+    const found = Array.from(document.querySelectorAll(selector))
+    const changed = found.length !== userMessages.length
+    userMessages = found
+    if (changed) pushToPanel()
 }
 
-let lastHref = window.location.href;
-const routeObserver = new MutationObserver(() => {
-    if (location.href !== lastHref) {
-        lastHref = location.href
-        setTimeout(collect, 1000) // slight delay to let the new DOM render
-    }
-    collect()
-})
+const pushToPanel = () => {
+    // Debounce so rapid DOM mutations don't fire 50 messages at once
+    if (pushDebounceTimer) clearTimeout(pushDebounceTimer)
+    pushDebounceTimer = setTimeout(() => {
+        // @ts-ignore
+        chrome.runtime.sendMessage({
+            type: 'MESSAGES_UPDATED',
+            messages: mapMessages(),
+        }).catch(() => {
+            // Panel is closed — this is fine, ignore the error
+        })
+    }, 150)
+}
 
-routeObserver.observe(document.body, { childList: true, subtree: true })
+// Watch for new user message elements specifically
+const domObserver = new MutationObserver((mutations) => {
+    if (!selector) return
+    let relevant = false
+    for (const mutation of mutations) {
+      for (const node of Array.from(mutation.addedNodes)) {
+        if (!(node instanceof Element)) continue
+        // Check if the added node is or contains a user message
+        if (node.matches(selector) || node.querySelector(selector)) {
+          relevant = true
+          break
+        }
+      }
+      if (relevant) break
+    }
+    if (relevant) collect()
+  })
+  
+domObserver.observe(document.body, { childList: true, subtree: true })
+
+let lastHref = location.href
+const navObserver = new MutationObserver(() => {
+  if (location.href !== lastHref) {
+    lastHref = location.href
+    setTimeout(collect, 800)
+  }
+})
+navObserver.observe(document.documentElement, { childList: true, subtree: true })
+
 collect()
 
 // @ts-ignore
 chrome.runtime.onMessage.addListener(
     (msg: ExtensionMessage, _sender: any, sendResponse: any) => {
         if (msg.type === 'GET_MESSAGES') {
-            collect() // always re-collect fresh on request
-            const mapped: UserMessage[] = userMessages.map((el, i) => ({
-                index: i,
-                preview: (el as HTMLElement).innerText.slice(0, 90).trim(),
-                fullText: (el as HTMLElement).innerText,
-            }))
-            sendResponse({ type: 'GET_MESSAGES_RESPONSE', messages: mapped })
+          collect()
+          sendResponse({ type: 'GET_MESSAGES_RESPONSE', messages: mapMessages() })
         }
-
+    
         if (msg.type === 'SCROLL_TO') {
-            const el = userMessages[msg.index] as HTMLElement | undefined
-            if (!el) return
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-            el.style.transition = 'background 0.3s'
-            el.style.background = 'rgba(250, 204, 21, 0.35)'
-            setTimeout(() => { el.style.background = '' }, 1200)
+          const el = userMessages[msg.index] as HTMLElement | undefined
+          if (!el) return
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          el.style.transition = 'background 0.3s'
+          el.style.background = 'rgba(250, 204, 21, 0.35)'
+          setTimeout(() => { el.style.background = '' }, 1200)
         }
-
+    
         return true
-    }
+      }
 )
