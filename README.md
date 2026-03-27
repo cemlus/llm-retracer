@@ -16,7 +16,7 @@ Message collection is based on the current host URL and a site-specific selector
 - `chatgpt.com`: `div[data-message-author-role="user"]`
 - `chat.openai.com`: `div[data-message-author-role="user"]` (fallback for older URLs)
 - `claude.ai`: `div[data-testid="user-message"]`
-- `gemini.google.com`: `div[class*="query-text-line"]`
+- `gemini.google.com`: `user-query`
 
 Supported domains are configured in `manifest.json` and used by the content script in `src/content/index.ts`.
 
