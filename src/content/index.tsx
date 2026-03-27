@@ -20,10 +20,24 @@ if (selector) {
 
   const shadow = host.attachShadow({ mode: 'open' })
 
-  const fontLink = document.createElement('link')
-  fontLink.rel = 'stylesheet'
-  fontLink.href = 'https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap'
-  shadow.appendChild(fontLink)
+  // @ts-ignore
+  const fontUrl = globalThis.chrome.runtime.getURL(
+    'fonts/dm_sans/DMSans-VariableFont_opsz,wght.ttf'
+  )
+  if (!fontUrl) {
+    console.error('Chrome runtime not available')
+  }
+
+  const style = document.createElement('style')
+  style.textContent = `
+    @font-face {
+      font-family: 'DM Sans';
+      src: url('${fontUrl}') format('truetype');
+      font-weight: 100 900;
+    }
+`
+
+  shadow.appendChild(style);
 
   const mountPoint = document.createElement('div')
   shadow.appendChild(mountPoint)
